@@ -10,4 +10,4 @@ MarkupSafe==2.1.5
 blinker==1.9.0
 click==8.1.7
 passlib==1.7.4
-requests==2.32.5
+requests==2.33.0
