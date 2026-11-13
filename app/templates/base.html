@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ config['APP_NAME'] }}{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendor/bootstrap-icons/font/bootstrap-icons.min.css') }}" rel="stylesheet">
+  <style>
+    body { padding-top: 56px; }
+    .nav-active > .nav-link { font-weight: 600; }
+    .table thead { background-color: var(--bs-tertiary-bg); }
+  </style>
+  {% block extrahead %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="{{ url_for('main.index') }}">
+      <i class="bi bi-chat-dots-fill me-1"></i>{{ config['APP_NAME'] }}
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navMain">
+      <ul class="navbar-nav me-auto">
+        {% if can_send %}
+        <li class="nav-item {% block nav_send %}{% endblock %}">
+          <a class="nav-link" href="{{ url_for('sms_module.send') }}">
+            <i class="bi bi-send me-1"></i>Send
+          </a>
+        </li>
+        {% endif %}
+        <li class="nav-item {% block nav_log %}{% endblock %}">
+          <a class="nav-link" href="{{ url_for('sms_module.log') }}">
+            <i class="bi bi-list-ul me-1"></i>Log
+          </a>
+        </li>
+        {% if current_user and current_user['role'] == 1 %}
+        <li class="nav-item dropdown {% block nav_admin %}{% endblock %}">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-wrench me-1"></i>Admin
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{{ url_for('admin_module.users_all') }}">Users</a></li>
+          </ul>
+        </li>
+        {% endif %}
+      </ul>
+
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item me-2">
+          <button class="btn btn-outline-secondary btn-sm" id="themeToggle" type="button" title="Toggle dark mode">
+            <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+          </button>
+        </li>
+        {% if current_user %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-person-circle me-1"></i>{{ current_user['username'] }}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><span class="dropdown-item-text text-muted small">{{ role_label(current_user['role']) }}</span></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('main.logout') }}">
+              <i class="bi bi-box-arrow-right me-1"></i>Logout</a></li>
+          </ul>
+        </li>
+        {% else %}
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('main.login') }}">Login</a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+{% if read_only_mode %}
+<div class="bg-warning-subtle border-bottom text-center py-2 small">
+  <i class="bi bi-lock-fill me-1"></i>
+  <strong>Read-only mode</strong> — changes are disabled.
+</div>
+{% endif %}
+
+{% if current_user and not lertify_ready %}
+<div class="bg-warning-subtle border-bottom text-center py-2 small">
+  <i class="bi bi-exclamation-triangle me-1"></i>
+  Set <code>LERTIFY_API_KEY</code> and <code>LERTIFY_SENDER</code> before sending SMS.
+</div>
+{% endif %}
+
+<div class="container-fluid mt-3">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{% if category == 'error' %}danger{% else %}success{% endif %} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</div>
+
+<script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script>
+  const _html = document.documentElement;
+  const _btn  = document.getElementById('themeToggle');
+  const _icon = document.getElementById('themeIcon');
+  function applyTheme(t) {
+    _html.setAttribute('data-bs-theme', t);
+    _icon.className = t === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+    localStorage.setItem('sms-theme', t);
+  }
+  if (_btn) {
+    _btn.addEventListener('click', () =>
+      applyTheme(_html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark'));
+    applyTheme(localStorage.getItem('sms-theme') || 'light');
+  }
+
+  async function copyText(text, ev) {
+    if (ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+  }
+</script>
+{% block extrascripts %}{% endblock %}
+</body>
+</html>

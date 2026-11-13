@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ config['APP_NAME'] }} – Initial Setup</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendor/bootstrap-icons/font/bootstrap-icons.min.css') }}" rel="stylesheet">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(-45deg, #0d6efd, #0a58ca, #084298, #052c65);
+      background-size: 400% 400%;
+      animation: gradientBG 20s ease infinite;
+    }
+    @keyframes gradientBG {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .login-box {
+      background: rgba(255,255,255,.95);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.25);
+      padding: 2rem;
+      width: 100%;
+      max-width: 420px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-box">
+  <div class="text-center mb-4">
+    <i class="bi bi-chat-dots-fill text-primary" style="font-size: 2.5rem;"></i>
+    <h4 class="mt-2 mb-0">{{ config['APP_NAME'] }}</h4>
+    <small class="text-muted">Create the first admin account</small>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{% if category == 'error' %}danger{% else %}success{% endif %} py-2">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="POST" action="{{ url_for('main.setup') }}">
+    {{ form.csrf_token }}
+    <div class="mb-3">
+      {{ form.username.label(class='form-label') }}
+      {{ form.username(class='form-control' + (' is-invalid' if form.username.errors else ''), autofocus=true, placeholder='admin') }}
+      {% for e in form.username.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="mb-3">
+      {{ form.password.label(class='form-label') }}
+      {{ form.password(class='form-control' + (' is-invalid' if form.password.errors else ''), placeholder='password') }}
+      {% for e in form.password.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="mb-3">
+      {{ form.password_2.label(class='form-label') }}
+      {{ form.password_2(class='form-control' + (' is-invalid' if form.password_2.errors else ''), placeholder='repeat password') }}
+      {% for e in form.password_2.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="d-grid mt-4">
+      {{ form.submit(class='btn btn-primary') }}
+    </div>
+  </form>
+</div>
+
+<script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

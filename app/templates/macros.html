@@ -1,0 +1,88 @@
+{% macro render_field(field, placeholder=None) %}
+<div class="mb-3">
+  {{ field.label(class='form-label') }}
+  {% if field.errors %}
+    {% for e in field.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    {{ field(class='form-control is-invalid', placeholder=placeholder or '', **kwargs) }}
+  {% else %}
+    {{ field(class='form-control', placeholder=placeholder or '', **kwargs) }}
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro render_select(field) %}
+<div class="mb-3">
+  {{ field.label(class='form-label') }}
+  {% if field.errors %}
+    {% for e in field.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    {{ field(class='form-select is-invalid') }}
+  {% else %}
+    {{ field(class='form-select') }}
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro render_textarea(field, rows=5) %}
+<div class="mb-3">
+  {{ field.label(class='form-label') }}
+  {% if field.errors %}
+    {% for e in field.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    {{ field(class='form-control is-invalid', rows=rows, **kwargs) }}
+  {% else %}
+    {{ field(class='form-control', rows=rows, **kwargs) }}
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro delete_modal(object_id, object_name, delete_url, label='Request deletion', confirm_name=None) %}
+<button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ object_id }}">
+  <i class="bi bi-trash me-1"></i>{{ label }}
+</button>
+<div class="modal fade" id="deleteModal{{ object_id }}" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete <strong>{{ object_name }}</strong>? This cannot be undone.
+        {% if confirm_name %}
+        <div class="mt-3">
+          <label for="deleteConfirmInput{{ object_id }}" class="form-label">
+            Type <strong>{{ confirm_name }}</strong> to confirm:
+          </label>
+          <input type="text" class="form-control" id="deleteConfirmInput{{ object_id }}"
+                 form="deleteForm{{ object_id }}" name="confirm_username" autocomplete="off">
+        </div>
+        {% endif %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form method="POST" action="{{ delete_url }}" class="d-inline" id="deleteForm{{ object_id }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger" id="deleteConfirmBtn{{ object_id }}"
+                  {% if confirm_name %}disabled{% endif %}>Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% if confirm_name %}
+<script>
+(function() {
+  var input = document.getElementById('deleteConfirmInput{{ object_id }}');
+  var btn = document.getElementById('deleteConfirmBtn{{ object_id }}');
+  var modal = document.getElementById('deleteModal{{ object_id }}');
+  var expected = {{ confirm_name|tojson }};
+  input.addEventListener('input', function() {
+    btn.disabled = input.value !== expected;
+  });
+  modal.addEventListener('hidden.bs.modal', function() {
+    input.value = '';
+    btn.disabled = true;
+  });
+})();
+</script>
+{% endif %}
+{% endmacro %}

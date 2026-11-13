@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ config['APP_NAME'] }} – Read-only</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendor/bootstrap-icons/font/bootstrap-icons.min.css') }}" rel="stylesheet">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(-45deg, #0d6efd, #0a58ca, #084298, #052c65);
+      background-size: 400% 400%;
+      animation: gradientBG 20s ease infinite;
+    }
+    @keyframes gradientBG {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .login-box {
+      background: rgba(255,255,255,.95);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.25);
+      padding: 2rem;
+      width: 100%;
+      max-width: 420px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-box text-center">
+  <i class="bi bi-lock-fill text-warning" style="font-size: 2.5rem;"></i>
+  <h4 class="mt-2 mb-2">{{ config['APP_NAME'] }}</h4>
+  <p class="text-muted mb-0">
+    This instance is in <strong>read-only mode</strong>, so the initial admin account cannot be created.
+    Disable <code>READ_ONLY_MODE</code> in <code>.env</code>, create an admin, then re-enable it.
+  </p>
+</div>
+
+</body>
+</html>

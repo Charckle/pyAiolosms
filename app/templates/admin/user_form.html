@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% from "macros.html" import render_field, render_select, delete_modal %}
+{% block nav_admin %}nav-active{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('admin_module.users_all') }}">Users</a></li>
+    <li class="breadcrumb-item active">{{ title }}</li>
+  </ol>
+</nav>
+
+<div class="row g-3">
+  <div class="col-md-6 col-lg-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header fw-semibold">{{ title }}</div>
+      <div class="card-body">
+        <form method="POST">
+          {{ form.csrf_token }}
+          {{ form.id }}
+
+          {{ render_field(form.username, autofocus=true) }}
+
+          <div class="row">
+            <div class="col-md-6">
+              {{ render_field(form.password, placeholder='Leave blank to keep current' if action == 'edit' else '') }}
+            </div>
+            <div class="col-md-6">{{ render_field(form.password_2, placeholder='Repeat') }}</div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">{{ render_select(form.role) }}</div>
+            <div class="col-md-6">{{ render_select(form.status) }}</div>
+          </div>
+
+          <div class="d-flex gap-2 mt-2">
+            {% if can_write %}
+            {{ form.submit(class='btn btn-primary') }}
+            {% endif %}
+            <a href="{{ url_for('admin_module.users_all') }}" class="btn btn-outline-secondary">
+              {% if can_write %}Cancel{% else %}Back{% endif %}
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% if action == 'edit' and user %}
+  <div class="col-md-6 col-lg-5">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header fw-semibold">API token</div>
+      <div class="card-body">
+        <p class="text-muted small">
+          Another application sends SMS with
+          <code>POST /api/v1/sms</code> and
+          <code>Authorization: Bearer &lt;token&gt;</code>.
+          The token is stored as a hash and shown only when you create it.
+        </p>
+
+        {% if issued_token %}
+        <div class="alert alert-warning">
+          <div class="fw-semibold mb-2">Copy this token now. It will not be shown again.</div>
+          <code id="new-api-token" class="user-select-all">{{ issued_token }}</code>
+          <button type="button" class="btn btn-sm btn-outline-dark ms-2"
+                  onclick="copyText(document.getElementById('new-api-token').textContent, event)">
+            Copy
+          </button>
+        </div>
+        {% elif user['has_token'] %}
+        <p class="mb-3"><span class="badge text-bg-primary">Active</span></p>
+        {% else %}
+        <p class="mb-3 text-muted">No token yet.</p>
+        {% endif %}
+
+        {% if can_write %}
+        <div class="d-flex gap-2">
+          <form method="POST" action="{{ url_for('admin_module.user_token_issue', user_id=user['id']) }}"
+                onsubmit="return {% if user['has_token'] %}confirm('Replace the current token? The old one will stop working.'){% else %}true{% endif %};">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-primary">
+              {% if user['has_token'] %}Replace token{% else %}Create token{% endif %}
+            </button>
+          </form>
+          {% if user['has_token'] %}
+          <form method="POST" action="{{ url_for('admin_module.user_token_revoke', user_id=user['id']) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-outline-danger">Revoke</button>
+          </form>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if can_write %}
+    <div class="card border-0 shadow-sm border-danger">
+      <div class="card-header text-danger">Danger Zone</div>
+      <div class="card-body">
+        {% if current_user and current_user['id'] == user['id'] %}
+        <button type="button" class="btn btn-outline-danger" disabled>
+          <i class="bi bi-trash me-1"></i>Request deletion
+        </button>
+        <p class="text-muted small mt-2 mb-0">You cannot delete your own account while logged in.</p>
+        {% else %}
+        {{ delete_modal(user['id'], user['username'],
+             url_for('admin_module.user_delete', user_id=user['id']),
+             label='Request deletion', confirm_name=user['username']) }}
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,1 +1,9 @@
-modules/__pycache__/*
+__pycache__/
+*.pyc
+.env
+data/
+.venv/
+venv/
+*.db
+*.db-wal
+*.db-shm
